@@ -6,4 +6,11 @@ before_install:
   - curl https://sdk.cloud.google.com | bash > /dev/null - # get the google sdk
   - source $HOME/google-cloud-sdk/path.bash.inc # load in some shell configurations
   - gcloud components update kubectl
-  - gcloud auth activate-service-account --key-file service-account.json # like iAM on aws
+  - gcloud auth activate-service-account --key-file multi-k8s-298021-5dabb4ae4563.json # like iAM on aws
+  - gcloud config set project multi-k8s-298021
+  - gcloud config set compute/zone us-east1-b
+  - gcloud container clusters get-credentials multi-cluster
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  - docker build -t betauser001/react-test -f ./client/Dockerfile.dev ./client
+scripts:
+  - docker run -e CI=true betauser001/react-test npm test
