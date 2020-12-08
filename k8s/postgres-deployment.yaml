@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment # Will be the host name in the cluster
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      component: postgres
+  template:
+    metadata:
+      labels:
+        component: postgres
+    spec:
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            # hey netes, I need 1Gb of storage
+            claimName: database-persistent-volume-claim
+      containers:
+        - name: postgres
+          image: postgres
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: postgres-storage # matches the volume name above
+              # where in the container should the storage be made available
+              # specifing postgres data directory here, when postgres writes here, it will really be writing to `postgres-storage`
+              mountPath: /var/lib/postgresql/data
+              subPath: postgres # the folder in the (persistent volume claim) that will hold the postgres data
+          env:
+            # kubectl create secret generic pgpassword --from-literal PGPASSWORD=12345asdf
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pgpassword
+                  key: PGPASSWORD
